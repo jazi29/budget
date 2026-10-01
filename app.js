@@ -30,7 +30,7 @@ function renderOps(){
  $('sin').textContent=money(si);$('sout').textContent=money(so);
  var c=$('cats');c.textContent='';
  var keys=Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a]});
- if(keys.length){var w=el('div','cats');keys.forEach(function(k){var r=el('div','cat'),h=el('div');h.appendChild(el('span',null,k));h.appendChild(el('span',null,money(byCat[k])));var bar=el('div','bar'),i=el('i');i.style.width=Math.max(3,byCat[k]/so*100)+'%';bar.appendChild(i);r.appendChild(h);r.appendChild(bar);w.appendChild(r)});c.appendChild(w)}
+ if(keys.length){var w=el('div','cats');keys.forEach(function(k){var r=el('div','cat'),h=el('div');h.appendChild(el('span',null,k));h.appendChild(el('span',null,money(byCat[k])+' ('+Math.round(byCat[k]/so*100)+'%)'));var bar=el('div','bar'),i=el('i');i.style.width=Math.max(3,byCat[k]/so*100)+'%';bar.appendChild(i);r.appendChild(h);r.appendChild(bar);w.appendChild(r)});c.appendChild(w)}
  var l=$('list');l.textContent='';
  if(!m.length){l.appendChild(el('div','empty','В этом месяце записей нет.\nНажмите «Добавить», чтобы внести первую.'));l.firstChild.style.whiteSpace='pre-line';return}
  var cur=null,grp=null;
@@ -170,6 +170,22 @@ function renderStat(){
  var p1=el('div','pair');p1.appendChild(bx('Расходы',cur.o?'−'+money(cur.o):money(0),'out'));p1.appendChild(bx('Доходы',cur.i?'+'+money(cur.i):money(0),'in'));c.appendChild(p1);
  var p2=el('div','pair');p2.appendChild(bx('Расход в день',money(Math.round(cur.o/days)),''));p2.appendChild(bx('Операций',String(cur.c),''));c.appendChild(p2);
  if(pv.c){var cb=el('div','box');cb.style.marginBottom='22px';cb.appendChild(cmp('Расходы',cur.o-pv.o,false));cb.appendChild(cmp('Доходы',cur.i-pv.i,true));cb.firstChild.style.marginTop='0';c.appendChild(cb)}
+ var pf=y+'-'+('0'+(m+1)).slice(-2),byC={};
+ tx.forEach(function(t){if(t.type==='out'&&t.date.indexOf(pf)===0)byC[t.cat]=(byC[t.cat]||0)+t.amount});
+ var ks=Object.keys(byC).sort(function(a,b){return byC[b]-byC[a]});
+ function pc(k){var v=byC[k]/cur.o*100;return v<1?'<1%':Math.round(v)+'%'}
+ var h2=el('div','day');h2.appendChild(el('span',null,'Куда уходят деньги'));h2.appendChild(el('span',null,'доля от расходов'));c.appendChild(h2);
+ if(!ks.length){var ne=el('div','box','Расходов в этом месяце нет');ne.style.cssText='color:var(--muted);margin-bottom:22px';c.appendChild(ne)}
+ else{
+  var tp=el('div','box');tp.style.marginBottom='10px';tp.appendChild(el('small',null,'Больше всего потрачено на'));tp.appendChild(el('strong','out',ks[0]+': '+pc(ks[0])+' расходов'));c.appendChild(tp);
+  var cw=el('div','cats');
+  ks.forEach(function(k,ix){
+   var r=el('div','cat'),h=el('div'),a=el('span',null,k),b=el('span',null,pc(k));
+   if(!ix)a.style.fontWeight='600';b.style.color='var(--ink)';b.style.fontWeight='600';
+   h.appendChild(a);h.appendChild(b);r.appendChild(h);
+   var bar=el('div','bar'),f=el('i');f.style.width=pct(byC[k],cur.o);bar.appendChild(f);r.appendChild(bar);
+   r.appendChild(el('div','im',money(byC[k])));cw.appendChild(r)});
+  cw.style.marginBottom='22px';c.appendChild(cw)}
  var hd=el('div','day');hd.appendChild(el('span',null,'Последние 6 месяцев'));c.appendChild(hd);
  var rows=[],mx=1;
  for(var k=0;k<6;k++){var d=new Date(y,m-k,1),s=sums(d.getFullYear(),d.getMonth());s.l=MONTHS[d.getMonth()]+' '+d.getFullYear();rows.push(s);mx=Math.max(mx,s.i,s.o)}
