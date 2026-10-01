@@ -75,3 +75,33 @@ textarea.fld{height:84px;resize:none;font-size:14px}
 input[type=date].fld{-webkit-appearance:none;appearance:none;display:block;text-align:left;height:46px;line-height:22px;min-width:0}
 input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:1.2em}
 input[type=date]::-webkit-datetime-edit{padding:0}
+.seg{position:relative}
+.seg button{position:relative;z-index:1;transition:color .25s}
+.seg button.on{background:none;box-shadow:none}
+.seg .thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/2);background:var(--surface);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.14);transition:transform .38s cubic-bezier(.32,.72,0,1)}
+.seg.three .thumb{width:calc((100% - 6px)/3)}
+.veil{display:flex;visibility:hidden;opacity:0;transition:opacity .28s,visibility 0s .4s}
+.veil.on{visibility:visible;opacity:1;transition:opacity .28s,visibility 0s}
+.sheet{animation:none;transform:translateY(105%);transition:transform .4s cubic-bezier(.32,.72,0,1)}
+.veil.on .sheet{transform:none}
+.sheet::before{content:"";display:block;width:36px;height:5px;border-radius:3px;background:rgba(128,128,128,.4);margin:-6px auto 14px}
+.toast{transform:translate(-50%,-24px);transition:opacity .3s,transform .45s cubic-bezier(.34,1.56,.64,1)}
+.toast.on{transform:translate(-50%,0)}
+.btn,.pay,.chips button,.ic{transition:transform .15s,background-color .2s,opacity .15s}
+.btn:active,.pay:active,.chips button:active{transform:scale(.97)}
+.ic:active{transform:scale(.88)}
+.fab{transition:transform .15s,opacity .15s;animation:pop .5s cubic-bezier(.34,1.56,.64,1) both}
+.fab:active{transform:translateX(-50%) scale(.94)}
+.row{transition:background-color .2s}
+.row.new{animation:flash 1.3s ease-out}
+.bar i{transform-origin:left;animation:grow .8s cubic-bezier(.2,.8,.2,1) both}
+#pOps,#pInst,#pStat{animation:rise .4s cubic-bezier(.2,.8,.2,1)}
+.sl{animation:inl .34s cubic-bezier(.2,.8,.2,1)!important}
+.sr{animation:inr .34s cubic-bezier(.2,.8,.2,1)!important}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+@keyframes inl{from{opacity:0;transform:translateX(-28px)}}
+@keyframes inr{from{opacity:0;transform:translateX(28px)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes pop{from{opacity:0;transform:translateX(-50%) scale(.6)}}
+@keyframes flash{0%{background:var(--chip);transform:scale(.97)}100%{background:transparent;transform:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}

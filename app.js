@@ -25,9 +25,9 @@ function renderOps(){
  var si=0,so=0,byCat={};
  m.forEach(function(t){if(t.type==='in')si+=t.amount;else{so+=t.amount;byCat[t.cat]=(byCat[t.cat]||0)+t.amount}});
  var b=si-so;
- $('bal').textContent=(b>0?'+':b<0?'−':'')+money(Math.abs(b));
+ countTo('bal',b,sg);
  $('bal').className='sum '+(b>0?'in':b<0?'out':'');
- $('sin').textContent=money(si);$('sout').textContent=money(so);
+ countTo('sin',si,money);countTo('sout',so,money);
  var c=$('cats');c.textContent='';
  var keys=Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a]});
  if(keys.length){var w=el('div','cats');keys.forEach(function(k){var r=el('div','cat'),h=el('div');h.appendChild(el('span',null,k));h.appendChild(el('span',null,money(byCat[k])+' ('+Math.round(byCat[k]/so*100)+'%)'));var bar=el('div','bar'),i=el('i');i.style.width=Math.max(3,byCat[k]/so*100)+'%';bar.appendChild(i);r.appendChild(h);r.appendChild(bar);w.appendChild(r)});c.appendChild(w)}
@@ -42,10 +42,10 @@ function renderOps(){
   var r=el('button','row'),tt=el('div','t'),n=el('div',null,t.cat);tt.appendChild(n);
   if(t.note)tt.appendChild(el('small',null,t.note));
   r.appendChild(tt);r.appendChild(el('div','a '+t.type,(t.type==='in'?'+':'−')+money(t.amount)));
-  r.onclick=function(){openForm(t)};grp.appendChild(r)});
+  if(t.id===lastId)r.classList.add('new');r.onclick=function(){openForm(t)};grp.appendChild(r)});lastId=null;
 }
 
-function setType(t){form.type=t;$('tout').classList.toggle('on',t==='out');$('tin').classList.toggle('on',t==='in');
+function setType(t){form.type=t;$('tout').classList.toggle('on',t==='out');$('tin').classList.toggle('on',t==='in');thumb($('tout').parentNode);
  if(CATS[t].indexOf(form.cat)<0)form.cat=CATS[t][0];drawChips()}
 function drawChips(){var c=$('chips');c.textContent='';CATS[form.type].forEach(function(k){var b=el('button',k===form.cat?'on':'',k);b.type='button';b.onclick=function(){form.cat=k;drawChips()};c.appendChild(b)})}
 function openForm(t){
@@ -59,7 +59,7 @@ function saveForm(){
  if(!(a>0)){toast('Введите сумму');$('amount').focus();return}
  var d=$('date').value||iso(new Date());
  var rec={id:form.id||uid(),type:form.type,amount:Math.round(a*100)/100,cat:form.cat,note:$('note').value.trim(),date:d};
- if(form.id){tx=tx.map(function(t){return t.id===form.id?rec:t})}else tx.push(rec);
+ if(form.id){tx=tx.map(function(t){return t.id===form.id?rec:t})}else tx.push(rec);lastId=rec.id;
  store();closeAll();
  var dd=new Date(d+'T00:00:00');view=new Date(dd.getFullYear(),dd.getMonth(),1);render();toast('Сохранено')}
 
@@ -76,8 +76,8 @@ function importData(txt){
   store();storeI();render();closeAll();toast(n+ni?'Загружено записей: '+(n+ni):'Новых записей нет')}
  catch(e){toast('Не удалось прочитать данные')}}
 
-$('prev').onclick=function(){view=new Date(view.getFullYear(),view.getMonth()-1,1);render()};
-$('next').onclick=function(){view=new Date(view.getFullYear(),view.getMonth()+1,1);render()};
+$('prev').onclick=function(){view=new Date(view.getFullYear(),view.getMonth()-1,1);render();bump(-1)};
+$('next').onclick=function(){view=new Date(view.getFullYear(),view.getMonth()+1,1);render();bump(1)};
 $('add').onclick=function(){if(tab==='inst')openI(null);else openForm(null)};
 $('menu').onclick=function(){$('paste').value='';$('v2').classList.add('on')};
 $('tout').onclick=function(){setType('out')};$('tin').onclick=function(){setType('in')};
@@ -139,7 +139,7 @@ function renderInst(){
 
 function payI(id){var i=findI(id);if(!i||i.paid>=i.months)return;
  var a=i.paid>=i.months-1?rem(i):mon(i),t={id:uid(),type:'out',amount:a,cat:'Рассрочка',note:i.name+' ('+(i.paid+1)+'/'+i.months+')',date:iso(new Date())};
- tx.push(t);i.txs=(i.txs||[]).concat(t.id);i.paid++;store();storeI();render();toast('Платёж записан в расходы')}
+ tx.push(t);lastId=t.id;i.txs=(i.txs||[]).concat(t.id);i.paid++;store();storeI();render();toast('Платёж записан в расходы')}
 function calcI(){var t=parseFloat($('itotal').value.replace(/\s/g,'').replace(',','.')),m=parseInt($('imonths').value,10);$('icalc').textContent=t>0&&m>0?'Платёж в месяц: '+money(Math.round(t/m*100)/100):''}
 function openI(i){iid=i?i.id:null;$('ititle').textContent=i?'Рассрочка':'Новая рассрочка';
  $('iname').value=i?i.name:'';$('itotal').value=i?String(i.total).replace('.',','):'';$('imonths').value=i?i.months:'';$('idate').value=i?i.start:iso(new Date());$('ipaid').value=i?i.paid:'';
@@ -202,9 +202,22 @@ function updTab(){
  $('pOps').style.display=tab==='ops'?'':'none';$('pInst').style.display=tab==='inst'?'':'none';$('pStat').style.display=tab==='stat'?'':'none';
  $('add').style.display=tab==='stat'?'none':'';$('add').textContent=tab==='inst'?'+ Рассрочка':'+ Добавить';
  document.querySelector('.month').style.visibility=tab==='inst'?'hidden':'visible';
- document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')===tab)})}
+ document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')===tab)});thumb($('tabs'))}
 function render(){renderOps();renderInst();renderStat();updTab()}
 document.querySelectorAll('#tabs button').forEach(function(b){b.onclick=function(){tab=b.getAttribute('data-tab');updTab();window.scrollTo(0,0)}});
 
+
+var cnt={},lastId=null;
+function countTo(id,to,fmt){var e=$(id),from=cnt[id]==null?0:cnt[id];cnt[id]=to;cancelAnimationFrame(e._r);
+ if(from===to||window.matchMedia('(prefers-reduced-motion:reduce)').matches){e.textContent=fmt(to);return}
+ var t0=performance.now();(function f(t){var p=Math.min(1,(t-t0)/550),k=1-Math.pow(1-p,3);
+  if(p<1){e.textContent=fmt(Math.round(from+(to-from)*k));e._r=requestAnimationFrame(f)}else e.textContent=fmt(to)})(t0)}
+function thumb(seg){var i=0;seg.querySelectorAll('button').forEach(function(x,k){if(x.classList.contains('on'))i=k});seg.querySelector('.thumb').style.transform='translateX('+i*100+'%)'}
+function bump(dir){var p=$(tab==='ops'?'pOps':tab==='stat'?'pStat':'pInst');p.classList.remove('sl','sr');void p.offsetWidth;p.classList.add(dir<0?'sl':'sr');setTimeout(function(){p.classList.remove('sl','sr')},450)}
+document.querySelectorAll('.sheet').forEach(function(sh){
+ var y0=null,dy=0;
+ sh.addEventListener('touchstart',function(e){if(sh.scrollTop<=0&&e.touches.length===1){y0=e.touches[0].clientY;dy=0}},{passive:true});
+ sh.addEventListener('touchmove',function(e){if(y0===null)return;dy=e.touches[0].clientY-y0;if(dy>0){sh.style.transition='none';sh.style.transform='translateY('+dy+'px)'}else dy=0},{passive:true});
+ sh.addEventListener('touchend',function(){if(y0===null)return;y0=null;var close=dy>110;dy=0;sh.style.transition='';sh.style.transform='';if(close)closeAll()})});
 loadI();load();render();
 })();
