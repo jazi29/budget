@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Бюджет">
+<meta name="theme-color" content="#F6F7F9">
+<meta name="description" content="Личный учёт доходов, расходов и рассрочек">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Бюджет</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="month">
+      <button class="ic" id="prev" aria-label="Предыдущий месяц">‹</button>
+      <b id="mlabel"></b>
+      <button class="ic" id="next" aria-label="Следующий месяц">›</button>
+    </div>
+    <button class="ic" id="menu" aria-label="Данные">⋯</button>
+  </div>
+  <div class="seg three tabs" id="tabs"><button data-tab="ops" class="on">Операции</button><button data-tab="inst">Рассрочки</button><button data-tab="stat">Статистика</button></div>
+  <div id="pOps">
+  <div class="balance"><small>Баланс за месяц</small><div class="sum" id="bal"></div></div>
+  <div class="pair">
+    <div class="box"><small>Расходы</small><strong class="out" id="sout"></strong></div>
+    <div class="box"><small>Доходы</small><strong class="in" id="sin"></strong></div>
+  </div>
+  <div id="cats"></div>
+  <div id="list"></div>
+  </div>
+  <div id="pInst" style="display:none"></div>
+  <div id="pStat" style="display:none"></div>
+</div>
+<button class="fab" id="add">+ Добавить</button>
+
+<div class="veil" id="v1"><div class="sheet">
+  <div class="seg"><button id="tout" class="on">Расход</button><button id="tin">Доход</button></div>
+  <input class="amt" id="amount" inputmode="decimal" placeholder="0" autocomplete="off">
+  <div class="chips" id="chips"></div>
+  <input class="fld" id="note" placeholder="Заметка (необязательно)" autocomplete="off">
+  <input class="fld" id="date" type="date">
+  <button class="btn" id="save">Сохранить</button>
+  <button class="btn del" id="del" style="display:none">Удалить</button>
+  <button class="btn ghost" data-close>Отмена</button>
+</div></div>
+
+<div class="veil" id="v2"><div class="sheet">
+  <h2 class="h">Мои данные</h2>
+  <p class="p">Всё хранится только на этом устройстве, в браузере. Скачайте копию, чтобы не потерять записи или перенести их на другое устройство.</p>
+  <button class="btn" id="exp">Скачать копию</button>
+  <button class="btn ghost" id="copy">Скопировать как текст</button>
+  <button class="btn ghost" id="impf">Загрузить из файла</button>
+  <input type="file" id="file" accept=".json,application/json,text/plain" hidden>
+  <textarea class="fld" id="paste" placeholder="Или вставьте сюда скопированные данные" style="margin-top:12px"></textarea>
+  <button class="btn ghost" id="impt">Загрузить из текста</button>
+  <button class="btn del" id="wipe">Удалить все записи</button>
+  <button class="btn ghost" data-close>Закрыть</button>
+</div></div>
+<div class="veil" id="v3"><div class="sheet">
+  <h2 class="h" id="ititle">Новая рассрочка</h2>
+  <input class="fld" id="iname" placeholder="Что в рассрочку, например телефон" autocomplete="off">
+  <input class="fld" id="itotal" inputmode="decimal" placeholder="Общая сумма" autocomplete="off">
+  <input class="fld" id="imonths" inputmode="numeric" placeholder="На сколько месяцев" autocomplete="off">
+  <label class="lb" for="idate">Дата первого платежа</label>
+  <input class="fld" id="idate" type="date">
+  <label class="lb" for="ipaid">Уже оплачено платежей</label>
+  <input class="fld" id="ipaid" inputmode="numeric" placeholder="0" autocomplete="off">
+  <div class="im" id="icalc" style="margin:0 4px 10px"></div>
+  <button class="btn" id="isave">Сохранить</button>
+  <button class="btn ghost" id="iundo" style="display:none">Отменить последний платёж</button>
+  <button class="btn del" id="idel" style="display:none">Удалить рассрочку</button>
+  <button class="btn ghost" data-close>Отмена</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
