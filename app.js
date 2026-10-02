@@ -19,23 +19,24 @@ function dl(s){var t=iso(new Date()),y=new Date();y.setDate(y.getDate()-1);
  if(s===t)return 'Сегодня';if(s===iso(y))return 'Вчера';var d=new Date(s+'T00:00:00');return d.getDate()+' '+GEN[d.getMonth()]}
 
 function renderOps(){
- $('mlabel').textContent=MONTHS[view.getMonth()]+' '+view.getFullYear();
+ var dm=tab==='ops'&&mode==='day',dstr=iso(dayView),tdy=iso(today0());
+ $('mlabel').textContent=dm?dayView.getDate()+' '+GEN[dayView.getMonth()]+(dayView.getFullYear()!==new Date().getFullYear()?' '+dayView.getFullYear():''):MONTHS[view.getMonth()]+' '+view.getFullYear();
  var p=view.getFullYear()+'-'+('0'+(view.getMonth()+1)).slice(-2);
- var m=tx.filter(function(t){return t.date.indexOf(p)===0}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.id>a.id?1:-1)});
+ var m=tx.filter(function(t){return dm?t.date===dstr:t.date.indexOf(p)===0}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.id>a.id?1:-1)});
  var si=0,so=0,byCat={};
  m.forEach(function(t){if(t.type==='in')si+=t.amount;else{so+=t.amount;byCat[t.cat]=(byCat[t.cat]||0)+t.amount}});
  var b=si-so;
  var all=tx.reduce(function(s,t){return s+(t.type==='in'?t.amount:-t.amount)},0),nw=new Date(),isCM=nw.getFullYear()===view.getFullYear()&&nw.getMonth()===view.getMonth();
  countTo('bal',all,sg);
- $('msub').textContent=(isCM?'В этом месяце':MONTHS[view.getMonth()]+' '+view.getFullYear())+': '+sg(b);
- $('mtag').textContent=isCM?'Текущий месяц':'К текущему месяцу';$('mtag').className='mtag'+(isCM?'':' go');
+ $('msub').textContent=dm?(dstr===tdy?'Сегодня':'За этот день')+': '+sg(b)+'  ·  За месяц: '+sg(sums(dayView.getFullYear(),dayView.getMonth()).n):(isCM?'В этом месяце':MONTHS[view.getMonth()]+' '+view.getFullYear())+': '+sg(b);
+ var atCur=dm?dstr===tdy:isCM;$('mtag').textContent=dm?(atCur?'Сегодня':'К сегодняшнему дню'):(atCur?'Текущий месяц':'К текущему месяцу');$('mtag').className='mtag'+(atCur?'':' go');
  $('bal').className='sum '+(all>0?'in':all<0?'out':'');
  countTo('sin',si,money);countTo('sout',so,money);
  var c=$('cats');c.textContent='';
  var keys=Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a]});
  if(keys.length){var w=el('div','cats');keys.forEach(function(k){var r=el('div','cat'),h=el('div');h.appendChild(el('span',null,ic(k)+' '+k));h.appendChild(el('span',null,money(byCat[k])+' ('+Math.round(byCat[k]/so*100)+'%)'));var bar=el('div','bar'),i=el('i');i.style.width=Math.max(3,byCat[k]/so*100)+'%';bar.appendChild(i);r.appendChild(h);r.appendChild(bar);w.appendChild(r)});c.appendChild(w)}
  var l=$('list');l.textContent='';
- if(!m.length){l.appendChild(el('div','empty','В этом месяце записей нет.\nНажмите «Добавить», чтобы внести первую.'));l.firstChild.style.whiteSpace='pre-line';return}
+ if(!m.length){l.appendChild(el('div','empty',(dm?(dstr===tdy?'Сегодня записей нет.':'В этот день записей нет.'):'В этом месяце записей нет.')+'\nНажмите «Добавить», чтобы внести первую.'));l.firstChild.style.whiteSpace='pre-line';return}
  var cur=null,grp=null;
  m.forEach(function(t){
   if(t.date!==cur){cur=t.date;
@@ -53,7 +54,7 @@ function setType(t){form.type=t;$('tout').classList.toggle('on',t==='out');$('ti
 function drawChips(){var c=$('chips');c.textContent='';CATS[form.type].forEach(function(k){var b=el('button',k===form.cat?'on':'',ic(k)+' '+k);b.type='button';b.onclick=function(){form.cat=k;drawChips()};c.appendChild(b)})}
 function openForm(t){
  form.id=t?t.id:null;form.cat=t?t.cat:'';
- $('amount').value=t?String(t.amount).replace('.',','):'';$('note').value=t?t.note||'':'';$('date').value=t?t.date:iso(new Date());
+ $('amount').value=t?String(t.amount).replace('.',','):'';$('note').value=t?t.note||'':'';$('date').value=t?t.date:(tab==='ops'&&mode==='day'?iso(dayView):iso(new Date()));
  $('del').style.display=t?'block':'none';setType(t?t.type:'out');$('v1').classList.add('on');
  if(!t)setTimeout(function(){$('amount').focus()},120)}
 function closeAll(){document.querySelectorAll('.veil').forEach(function(v){v.classList.remove('on')});document.activeElement&&document.activeElement.blur()}
@@ -64,7 +65,7 @@ function saveForm(){
  var rec={id:form.id||uid(),type:form.type,amount:Math.round(a*100)/100,cat:form.cat,note:$('note').value.trim(),date:d};
  if(form.id){tx=tx.map(function(t){return t.id===form.id?rec:t})}else tx.push(rec);lastId=rec.id;
  store();closeAll();
- var dd=new Date(d+'T00:00:00');view=new Date(dd.getFullYear(),dd.getMonth(),1);render();toast('Сохранено')}
+ var dd=new Date(d+'T00:00:00');view=new Date(dd.getFullYear(),dd.getMonth(),1);dayView=dd;render();toast('Сохранено')}
 
 function payload(){return JSON.stringify({app:'budget',version:2,exported:new Date().toISOString(),transactions:tx,installments:inst},null,1)}
 function importData(txt){
@@ -79,8 +80,8 @@ function importData(txt){
   store();storeI();render();closeAll();toast(n+ni?'Загружено записей: '+(n+ni):'Новых записей нет')}
  catch(e){toast('Не удалось прочитать данные')}}
 
-$('prev').onclick=function(){view=new Date(view.getFullYear(),view.getMonth()-1,1);render();bump(-1)};
-$('next').onclick=function(){view=new Date(view.getFullYear(),view.getMonth()+1,1);render();bump(1)};
+$('prev').onclick=function(){step(-1)};
+$('next').onclick=function(){step(1)};
 $('add').onclick=function(){if(tab==='inst')openI(null);else openForm(null)};
 $('menu').onclick=function(){$('paste').value='';$('v2').classList.add('on')};
 $('tout').onclick=function(){setType('out')};$('tin').onclick=function(){setType('in')};
@@ -231,9 +232,9 @@ function updTab(){
  $('pOps').style.display=tab==='ops'?'':'none';$('pInst').style.display=tab==='inst'?'':'none';$('pStat').style.display=tab==='stat'?'':'none';
  $('add').style.display=tab==='stat'?'none':'';$('add').textContent=tab==='inst'?'+ Рассрочка':'+ Добавить';
  document.querySelector('.month').style.visibility=tab==='inst'?'hidden':'visible';
- document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')===tab)});thumb($('tabs'))}
+ document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')===tab)});thumb($('tabs'));document.querySelectorAll('#modeSeg button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-mode')===mode)});thumb($('modeSeg'))}
 function render(){renderOps();renderInst();renderStat();updTab()}
-document.querySelectorAll('#tabs button').forEach(function(b){b.onclick=function(){tab=b.getAttribute('data-tab');updTab();window.scrollTo(0,0)}});
+document.querySelectorAll('#tabs button').forEach(function(b){b.onclick=function(){tab=b.getAttribute('data-tab');render();window.scrollTo(0,0)}});
 
 
 var cnt={},lastId=null;
@@ -253,6 +254,22 @@ var ICO={'Еда':'🍔','Транспорт':'🚌','Дом':'🏠','Здоро
 var MON3=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'],statMode='week';
 function ic(k){return ICO[k]||'📦'}
 function kfmt(v){v=Math.round(v);if(v>=1e6)return(v/1e6).toFixed(1).replace('.0','')+'м';if(v>=1e4)return Math.round(v/1000)+'к';if(v>=1000)return(v/1000).toFixed(1).replace('.0','')+'к';return String(v)}
-$('mtag').onclick=function(){var n=new Date(),t0=new Date(n.getFullYear(),n.getMonth(),1);if(view.getTime()===t0.getTime())return;var dir=view<t0?1:-1;view=t0;render();bump(dir)};
+$('mtag').onclick=function(){var t0=today0(),m0=new Date(t0.getFullYear(),t0.getMonth(),1);
+ if(tab==='ops'&&mode==='day'){if(dayView.getTime()===t0.getTime())return;var d1=dayView<t0?1:-1;dayView=t0;view=m0;render();bump(d1)}
+ else{if(view.getTime()===m0.getTime())return;var d2=view<m0?1:-1;view=m0;render();bump(d2)}};
+
+var mode='day',dayView=today0(),lastDay=iso(today0());
+function today0(){var n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate())}
+function step(dir){
+ if(tab==='ops'&&mode==='day'){dayView=new Date(dayView.getFullYear(),dayView.getMonth(),dayView.getDate()+dir);view=new Date(dayView.getFullYear(),dayView.getMonth(),1)}
+ else view=new Date(view.getFullYear(),view.getMonth()+dir,1);
+ render();bump(dir)}
+function checkDay(){var t=iso(today0());if(t!==lastDay){lastDay=t;dayView=today0();view=new Date(dayView.getFullYear(),dayView.getMonth(),1);render()}}
+document.addEventListener('visibilitychange',function(){if(!document.hidden)checkDay()});
+window.addEventListener('pageshow',checkDay);setInterval(checkDay,60000);
+document.querySelectorAll('#modeSeg button').forEach(function(b){b.onclick=function(){var nm=b.getAttribute('data-mode');if(nm===mode)return;
+ if(nm==='day'){var t0=today0();dayView=(view.getFullYear()===t0.getFullYear()&&view.getMonth()===t0.getMonth())?t0:new Date(view.getFullYear(),view.getMonth(),1)}
+ else view=new Date(dayView.getFullYear(),dayView.getMonth(),1);
+ mode=nm;render()}});
 loadI();load();render();
 })();
