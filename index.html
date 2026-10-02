@@ -9,7 +9,7 @@
 <meta name="description" content="Личный учёт доходов, расходов и рассрочек">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" type="image/png">
 <title>Бюджет</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -18,14 +18,14 @@
   <div class="top">
     <div class="month">
       <button class="ic" id="prev" aria-label="Предыдущий месяц">‹</button>
-      <b id="mlabel"></b>
+      <div class="mw"><b id="mlabel"></b><button class="mtag" id="mtag"></button></div>
       <button class="ic" id="next" aria-label="Следующий месяц">›</button>
     </div>
     <button class="ic" id="menu" aria-label="Данные">⋯</button>
   </div>
   <div class="seg three tabs" id="tabs"><i class="thumb"></i><button data-tab="ops" class="on">Операции</button><button data-tab="inst">Рассрочки</button><button data-tab="stat">Статистика</button></div>
   <div id="pOps">
-  <div class="balance"><small>Баланс за месяц</small><div class="sum" id="bal"></div></div>
+  <div class="balance"><small>Текущие деньги</small><div class="sum" id="bal"></div><div class="msub" id="msub"></div></div>
   <div class="pair">
     <div class="box"><small>Расходы</small><strong class="out" id="sout"></strong></div>
     <div class="box"><small>Доходы</small><strong class="in" id="sin"></strong></div>

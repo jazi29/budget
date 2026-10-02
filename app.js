@@ -25,12 +25,15 @@ function renderOps(){
  var si=0,so=0,byCat={};
  m.forEach(function(t){if(t.type==='in')si+=t.amount;else{so+=t.amount;byCat[t.cat]=(byCat[t.cat]||0)+t.amount}});
  var b=si-so;
- countTo('bal',b,sg);
- $('bal').className='sum '+(b>0?'in':b<0?'out':'');
+ var all=tx.reduce(function(s,t){return s+(t.type==='in'?t.amount:-t.amount)},0),nw=new Date(),isCM=nw.getFullYear()===view.getFullYear()&&nw.getMonth()===view.getMonth();
+ countTo('bal',all,sg);
+ $('msub').textContent=(isCM?'В этом месяце':MONTHS[view.getMonth()]+' '+view.getFullYear())+': '+sg(b);
+ $('mtag').textContent=isCM?'Текущий месяц':'К текущему месяцу';$('mtag').className='mtag'+(isCM?'':' go');
+ $('bal').className='sum '+(all>0?'in':all<0?'out':'');
  countTo('sin',si,money);countTo('sout',so,money);
  var c=$('cats');c.textContent='';
  var keys=Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a]});
- if(keys.length){var w=el('div','cats');keys.forEach(function(k){var r=el('div','cat'),h=el('div');h.appendChild(el('span',null,k));h.appendChild(el('span',null,money(byCat[k])+' ('+Math.round(byCat[k]/so*100)+'%)'));var bar=el('div','bar'),i=el('i');i.style.width=Math.max(3,byCat[k]/so*100)+'%';bar.appendChild(i);r.appendChild(h);r.appendChild(bar);w.appendChild(r)});c.appendChild(w)}
+ if(keys.length){var w=el('div','cats');keys.forEach(function(k){var r=el('div','cat'),h=el('div');h.appendChild(el('span',null,ic(k)+' '+k));h.appendChild(el('span',null,money(byCat[k])+' ('+Math.round(byCat[k]/so*100)+'%)'));var bar=el('div','bar'),i=el('i');i.style.width=Math.max(3,byCat[k]/so*100)+'%';bar.appendChild(i);r.appendChild(h);r.appendChild(bar);w.appendChild(r)});c.appendChild(w)}
  var l=$('list');l.textContent='';
  if(!m.length){l.appendChild(el('div','empty','В этом месяце записей нет.\nНажмите «Добавить», чтобы внести первую.'));l.firstChild.style.whiteSpace='pre-line';return}
  var cur=null,grp=null;
@@ -39,15 +42,15 @@ function renderOps(){
    var tot=m.filter(function(x){return x.date===cur}).reduce(function(s,x){return s+(x.type==='in'?x.amount:-x.amount)},0);
    var d=el('div','day');d.appendChild(el('span',null,dl(cur)));d.appendChild(el('span',null,(tot>0?'+':tot<0?'−':'')+money(Math.abs(tot))));
    l.appendChild(d);grp=el('div','group');l.appendChild(grp)}
-  var r=el('button','row'),tt=el('div','t'),n=el('div',null,t.cat);tt.appendChild(n);
+  var r=el('button','row'),tt=el('div','t'),n=el('div',null,t.cat);tt.appendChild(n);var ci=el('span','ci',ic(t.cat));
   if(t.note)tt.appendChild(el('small',null,t.note));
-  r.appendChild(tt);r.appendChild(el('div','a '+t.type,(t.type==='in'?'+':'−')+money(t.amount)));
+  r.appendChild(ci);r.appendChild(tt);r.appendChild(el('div','a '+t.type,(t.type==='in'?'+':'−')+money(t.amount)));
   if(t.id===lastId)r.classList.add('new');r.onclick=function(){openForm(t)};grp.appendChild(r)});lastId=null;
 }
 
 function setType(t){form.type=t;$('tout').classList.toggle('on',t==='out');$('tin').classList.toggle('on',t==='in');thumb($('tout').parentNode);
  if(CATS[t].indexOf(form.cat)<0)form.cat=CATS[t][0];drawChips()}
-function drawChips(){var c=$('chips');c.textContent='';CATS[form.type].forEach(function(k){var b=el('button',k===form.cat?'on':'',k);b.type='button';b.onclick=function(){form.cat=k;drawChips()};c.appendChild(b)})}
+function drawChips(){var c=$('chips');c.textContent='';CATS[form.type].forEach(function(k){var b=el('button',k===form.cat?'on':'',ic(k)+' '+k);b.type='button';b.onclick=function(){form.cat=k;drawChips()};c.appendChild(b)})}
 function openForm(t){
  form.id=t?t.id:null;form.cat=t?t.cat:'';
  $('amount').value=t?String(t.amount).replace('.',','):'';$('note').value=t?t.note||'':'';$('date').value=t?t.date:iso(new Date());
@@ -163,40 +166,66 @@ function sg(v){return(v>0?'+':v<0?'−':'')+money(Math.abs(v))}
 function cmp(name,d,goodUp){return el('div','im'+(d===0?'':((d>0)===goodUp?' in':' out')),name+': '+(d===0?'как в прошлом месяце':'на '+money(Math.abs(d))+(d>0?' больше':' меньше')+', чем в прошлом месяце'))}
 function renderStat(){
  var c=$('pStat');c.textContent='';
- var y=view.getFullYear(),m=view.getMonth(),cur=sums(y,m),pd=new Date(y,m-1,1),pv=sums(pd.getFullYear(),pd.getMonth());
- var hero=el('div','balance');hero.appendChild(el('small',null,'Итог за '+MONTHS[m].toLowerCase()));
+ var y=view.getFullYear(),m=view.getMonth(),cur=sums(y,m),pd=new Date(y,m-1,1),pv=sums(pd.getFullYear(),pd.getMonth()),now=new Date();
+ var pf=y+'-'+('0'+(m+1)).slice(-2),isCur=now.getFullYear()===y&&now.getMonth()===m;
+ var hero=el('div','balance');hero.appendChild(el('small',null,'Итог за '+MONTHS[m].toLowerCase()+(isCur?' (текущий месяц)':'')));
  hero.appendChild(el('div','sum '+(cur.n>0?'in':cur.n<0?'out':''),sg(cur.n)));c.appendChild(hero);
- var now=new Date(),dim=new Date(y,m+1,0).getDate(),days=(now.getFullYear()===y&&now.getMonth()===m)?now.getDate():dim;
  var p1=el('div','pair');p1.appendChild(bx('Расходы',cur.o?'−'+money(cur.o):money(0),'out'));p1.appendChild(bx('Доходы',cur.i?'+'+money(cur.i):money(0),'in'));c.appendChild(p1);
- var p2=el('div','pair');p2.appendChild(bx('Расход в день',money(Math.round(cur.o/days)),''));p2.appendChild(bx('Операций',String(cur.c),''));c.appendChild(p2);
+ var wdn=(now.getDay()+6)%7,ms=iso(new Date(now.getFullYear(),now.getMonth(),now.getDate()-wdn)),ts=iso(now),wk=0;
+ tx.forEach(function(t){if(t.type==='out'&&t.date>=ms&&t.date<=ts)wk+=t.amount});
+ var dim=new Date(y,m+1,0).getDate(),days=isCur?now.getDate():dim;
+ var p2=el('div','pair');p2.appendChild(bx('Расходы за эту неделю',money(wk),'out'));p2.appendChild(bx('Расход в день',money(Math.round(cur.o/days)),''));c.appendChild(p2);
  if(pv.c){var cb=el('div','box');cb.style.marginBottom='22px';cb.appendChild(cmp('Расходы',cur.o-pv.o,false));cb.appendChild(cmp('Доходы',cur.i-pv.i,true));cb.firstChild.style.marginTop='0';c.appendChild(cb)}
- var pf=y+'-'+('0'+(m+1)).slice(-2),byC={};
+
+ var hc=el('div','box');hc.style.marginBottom='22px';
+ var sgm=el('div','seg');sgm.style.marginBottom='6px';sgm.appendChild(el('i','thumb'));
+ var bw=el('button',statMode==='week'?'on':'','По неделям'),bm=el('button',statMode==='month'?'on':'','По месяцам');
+ bw.type='button';bm.type='button';sgm.appendChild(bw);sgm.appendChild(bm);hc.appendChild(sgm);thumb(sgm);
+ var ch=el('div','chart'),dt=el('div');hc.appendChild(ch);hc.appendChild(dt);
+ bw.onclick=function(){statMode='week';bw.classList.add('on');bm.classList.remove('on');thumb(sgm);draw()};
+ bm.onclick=function(){statMode='month';bm.classList.add('on');bw.classList.remove('on');thumb(sgm);draw()};
+ function draw(){
+  ch.textContent='';var cols=[],sel=0,H=120,mx=1;
+  if(statMode==='week'){
+   var ws=[],w0=null;
+   for(var d=1;d<=dim;d++){var wx=(new Date(y,m,d).getDay()+6)%7;if(d===1||wx===0){w0={a:d,b:d,o:0,i:0};ws.push(w0)}w0.b=d}
+   tx.forEach(function(t){if(t.date.indexOf(pf)===0){var dd=+t.date.slice(8,10);for(var q=0;q<ws.length;q++){if(dd>=ws[q].a&&dd<=ws[q].b){if(t.type==='in')ws[q].i+=t.amount;else ws[q].o+=t.amount;break}}}});
+   ws.forEach(function(w,q){var lb=w.a===w.b?String(w.a):w.a+'–'+w.b;cols.push({l:lb,o:w.o,i:w.i,t:lb+' '+GEN[m]});
+    if(isCur){if(now.getDate()>=w.a&&now.getDate()<=w.b)sel=q}else if(w.o>ws[sel].o)sel=q})
+  }else{
+   for(var k=5;k>=0;k--){var d2=new Date(y,m-k,1),s=sums(d2.getFullYear(),d2.getMonth());cols.push({l:MON3[d2.getMonth()],o:s.o,i:s.i,t:MONTHS[d2.getMonth()]+' '+d2.getFullYear()})}
+   sel=cols.length-1}
+  cols.forEach(function(x){mx=Math.max(mx,x.o,statMode==='month'?x.i:0)});
+  var det=function(){
+   dt.textContent='';var x=cols[sel],h=el('div',null,x.t);h.style.cssText='font-weight:600;margin-top:14px';dt.appendChild(h);
+   var r=el('div','im sp');r.appendChild(el('span','out','Расходы '+(x.o?'−'+money(x.o):money(0))));r.appendChild(el('span','in','Доходы '+(x.i?'+'+money(x.i):money(0))));dt.appendChild(r)};
+  cols.forEach(function(x,q){
+   var col=el('button','col'+(q===sel?' sel':'')),bars=el('div','bars');col.type='button';
+   (statMode==='month'?[[x.o,'var(--out)'],[x.i,'var(--in)']]:[[x.o,'var(--out)']]).forEach(function(p){
+    var b=el('div','b');b.style.height=Math.max(3,Math.round(p[0]/mx*H))+'px';b.style.background=p[1];
+    if(statMode==='week'&&p[0]>0)b.appendChild(el('span',null,kfmt(p[0])));bars.appendChild(b)});
+   col.appendChild(bars);col.appendChild(el('div','lbl',x.l));
+   col.onclick=function(){sel=q;ch.querySelectorAll('.col').forEach(function(e,j){e.classList.toggle('sel',j===q)});det()};
+   ch.appendChild(col)});
+  det()}
+ draw();c.appendChild(hc);
+
+ var byC={};
  tx.forEach(function(t){if(t.type==='out'&&t.date.indexOf(pf)===0)byC[t.cat]=(byC[t.cat]||0)+t.amount});
  var ks=Object.keys(byC).sort(function(a,b){return byC[b]-byC[a]});
  function pc(k){var v=byC[k]/cur.o*100;return v<1?'<1%':Math.round(v)+'%'}
  var h2=el('div','day');h2.appendChild(el('span',null,'Куда уходят деньги'));h2.appendChild(el('span',null,'доля от расходов'));c.appendChild(h2);
- if(!ks.length){var ne=el('div','box','Расходов в этом месяце нет');ne.style.cssText='color:var(--muted);margin-bottom:22px';c.appendChild(ne)}
+ if(!ks.length){var ne=el('div','box','Расходов в этом месяце нет');ne.style.cssText='color:var(--muted)';c.appendChild(ne)}
  else{
-  var tp=el('div','box');tp.style.marginBottom='10px';tp.appendChild(el('small',null,'Больше всего потрачено на'));tp.appendChild(el('strong','out',ks[0]+': '+pc(ks[0])+' расходов'));c.appendChild(tp);
+  var tp=el('div','box');tp.style.marginBottom='10px';tp.appendChild(el('small',null,'Больше всего потрачено на'));tp.appendChild(el('strong','out',ic(ks[0])+' '+ks[0]+': '+pc(ks[0])+' расходов'));c.appendChild(tp);
   var cw=el('div','cats');
   ks.forEach(function(k,ix){
-   var r=el('div','cat'),h=el('div'),a=el('span',null,k),b=el('span',null,pc(k));
+   var r=el('div','cat'),h=el('div'),a=el('span',null,ic(k)+' '+k),b=el('span',null,pc(k));
    if(!ix)a.style.fontWeight='600';b.style.color='var(--ink)';b.style.fontWeight='600';
    h.appendChild(a);h.appendChild(b);r.appendChild(h);
    var bar=el('div','bar'),f=el('i');f.style.width=pct(byC[k],cur.o);bar.appendChild(f);r.appendChild(bar);
    r.appendChild(el('div','im',money(byC[k])));cw.appendChild(r)});
-  cw.style.marginBottom='22px';c.appendChild(cw)}
- var hd=el('div','day');hd.appendChild(el('span',null,'Последние 6 месяцев'));c.appendChild(hd);
- var rows=[],mx=1;
- for(var k=0;k<6;k++){var d=new Date(y,m-k,1),s=sums(d.getFullYear(),d.getMonth());s.l=MONTHS[d.getMonth()]+' '+d.getFullYear();rows.push(s);mx=Math.max(mx,s.i,s.o)}
- var w=el('div','cats');
- rows.forEach(function(s,k){
-  var r=el('div','cat'),h=el('div'),a=el('span',null,s.l),b=el('span',null,sg(s.n));
-  if(!k)a.style.fontWeight='600';b.style.color=s.n>0?'var(--in)':s.n<0?'var(--out)':'var(--muted)';
-  h.appendChild(a);h.appendChild(b);r.appendChild(h);
-  [[s.o,'var(--out)'],[s.i,'var(--in)']].forEach(function(x){var bar=el('div','bar'),f=el('i');f.style.width=pct(x[0],mx);f.style.background=x[1];bar.appendChild(f);r.appendChild(bar)});
-  var l=el('div','im sp');l.appendChild(el('span','out',s.o?'−'+money(s.o):money(0)));l.appendChild(el('span','in',s.i?'+'+money(s.i):money(0)));r.appendChild(l);w.appendChild(r)});
- c.appendChild(w)}
+  c.appendChild(cw)}}
 
 function updTab(){
  $('pOps').style.display=tab==='ops'?'':'none';$('pInst').style.display=tab==='inst'?'':'none';$('pStat').style.display=tab==='stat'?'':'none';
@@ -219,5 +248,11 @@ document.querySelectorAll('.sheet').forEach(function(sh){
  sh.addEventListener('touchstart',function(e){if(sh.scrollTop<=0&&e.touches.length===1){y0=e.touches[0].clientY;dy=0}},{passive:true});
  sh.addEventListener('touchmove',function(e){if(y0===null)return;dy=e.touches[0].clientY-y0;if(dy>0){sh.style.transition='none';sh.style.transform='translateY('+dy+'px)'}else dy=0},{passive:true});
  sh.addEventListener('touchend',function(){if(y0===null)return;y0=null;var close=dy>110;dy=0;sh.style.transition='';sh.style.transform='';if(close)closeAll()})});
+
+var ICO={'Еда':'🍔','Транспорт':'🚌','Дом':'🏠','Здоровье':'💊','Покупки':'🛍️','Развлечения':'🎬','Рассрочка':'💳','Другое':'📦','Зарплата':'💼','Подработка':'💻','Подарок':'🎁'};
+var MON3=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'],statMode='week';
+function ic(k){return ICO[k]||'📦'}
+function kfmt(v){v=Math.round(v);if(v>=1e6)return(v/1e6).toFixed(1).replace('.0','')+'м';if(v>=1e4)return Math.round(v/1000)+'к';if(v>=1000)return(v/1000).toFixed(1).replace('.0','')+'к';return String(v)}
+$('mtag').onclick=function(){var n=new Date(),t0=new Date(n.getFullYear(),n.getMonth(),1);if(view.getTime()===t0.getTime())return;var dir=view<t0?1:-1;view=t0;render();bump(dir)};
 loadI();load();render();
 })();
