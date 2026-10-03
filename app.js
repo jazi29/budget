@@ -34,7 +34,7 @@ function renderOps(){
  countTo('sin',si,money);countTo('sout',so,money);
  var c=$('cats');c.textContent='';
  var keys=Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a]});
- if(keys.length){var w=el('div','cats');keys.forEach(function(k){var r=el('div','cat'),h=el('div');h.appendChild(el('span',null,ic(k)+' '+k));h.appendChild(el('span',null,money(byCat[k])+' ('+Math.round(byCat[k]/so*100)+'%)'));var bar=el('div','bar'),i=el('i');i.style.width=Math.max(3,byCat[k]/so*100)+'%';bar.appendChild(i);r.appendChild(h);r.appendChild(bar);w.appendChild(r)});c.appendChild(w)}
+ if(keys.length){var w=el('div','cats');keys.forEach(function(k){var r=el('div','cat'),h=el('div');h.appendChild(catName(k));h.appendChild(el('span',null,money(byCat[k])+' ('+Math.round(byCat[k]/so*100)+'%)'));var bar=el('div','bar'),i=el('i');i.style.width=Math.max(3,byCat[k]/so*100)+'%';bar.appendChild(i);r.appendChild(h);r.appendChild(bar);w.appendChild(r)});c.appendChild(w)}
  var l=$('list');l.textContent='';
  if(!m.length){l.appendChild(el('div','empty',(dm?(dstr===tdy?'Сегодня записей нет.':'В этот день записей нет.'):'В этом месяце записей нет.')+'\nНажмите «Добавить», чтобы внести первую.'));l.firstChild.style.whiteSpace='pre-line';return}
  var cur=null,grp=null;
@@ -43,7 +43,7 @@ function renderOps(){
    var tot=m.filter(function(x){return x.date===cur}).reduce(function(s,x){return s+(x.type==='in'?x.amount:-x.amount)},0);
    var d=el('div','day');d.appendChild(el('span',null,dl(cur)));d.appendChild(el('span',null,(tot>0?'+':tot<0?'−':'')+money(Math.abs(tot))));
    l.appendChild(d);grp=el('div','group');l.appendChild(grp)}
-  var r=el('button','row'),tt=el('div','t'),n=el('div',null,t.cat);tt.appendChild(n);var ci=el('span','ci',ic(t.cat));
+  var r=el('button','row'),tt=el('div','t'),n=el('div',null,t.cat);tt.appendChild(n);var ci=icEl('ci',t.cat);
   if(t.note)tt.appendChild(el('small',null,t.note));
   r.appendChild(ci);r.appendChild(tt);r.appendChild(el('div','a '+t.type,(t.type==='in'?'+':'−')+money(t.amount)));
   if(t.id===lastId)r.classList.add('new');r.onclick=function(){openForm(t)};grp.appendChild(r)});lastId=null;
@@ -51,7 +51,7 @@ function renderOps(){
 
 function setType(t){form.type=t;$('tout').classList.toggle('on',t==='out');$('tin').classList.toggle('on',t==='in');thumb($('tout').parentNode);
  if(CATS[t].indexOf(form.cat)<0)form.cat=CATS[t][0];drawChips()}
-function drawChips(){var c=$('chips');c.textContent='';CATS[form.type].forEach(function(k){var b=el('button',k===form.cat?'on':'',ic(k)+' '+k);b.type='button';b.onclick=function(){form.cat=k;drawChips()};c.appendChild(b)})}
+function drawChips(){var c=$('chips');c.textContent='';CATS[form.type].forEach(function(k){var b=el('button',k===form.cat?'on':'');b.appendChild(icEl('si',k));b.appendChild(document.createTextNode(k));b.type='button';b.onclick=function(){form.cat=k;drawChips()};c.appendChild(b)})}
 function openForm(t){
  form.id=t?t.id:null;form.cat=t?t.cat:'';
  $('amount').value=t?String(t.amount).replace('.',','):'';$('note').value=t?t.note||'':'';$('date').value=t?t.date:(tab==='ops'&&mode==='day'?iso(dayView):iso(new Date()));
@@ -218,10 +218,10 @@ function renderStat(){
  var h2=el('div','day');h2.appendChild(el('span',null,'Куда уходят деньги'));h2.appendChild(el('span',null,'доля от расходов'));c.appendChild(h2);
  if(!ks.length){var ne=el('div','box','Расходов в этом месяце нет');ne.style.cssText='color:var(--muted)';c.appendChild(ne)}
  else{
-  var tp=el('div','box');tp.style.marginBottom='10px';tp.appendChild(el('small',null,'Больше всего потрачено на'));tp.appendChild(el('strong','out',ic(ks[0])+' '+ks[0]+': '+pc(ks[0])+' расходов'));c.appendChild(tp);
+  var tp=el('div','box');tp.style.marginBottom='10px';tp.appendChild(el('small',null,'Больше всего потрачено на'));tp.appendChild(el('strong','out',ks[0]+': '+pc(ks[0])+' расходов'));c.appendChild(tp);
   var cw=el('div','cats');
   ks.forEach(function(k,ix){
-   var r=el('div','cat'),h=el('div'),a=el('span',null,ic(k)+' '+k),b=el('span',null,pc(k));
+   var r=el('div','cat'),h=el('div'),a=catName(k),b=el('span',null,pc(k));
    if(!ix)a.style.fontWeight='600';b.style.color='var(--ink)';b.style.fontWeight='600';
    h.appendChild(a);h.appendChild(b);r.appendChild(h);
    var bar=el('div','bar'),f=el('i');f.style.width=pct(byC[k],cur.o);bar.appendChild(f);r.appendChild(bar);
@@ -250,9 +250,21 @@ document.querySelectorAll('.sheet').forEach(function(sh){
  sh.addEventListener('touchmove',function(e){if(y0===null)return;dy=e.touches[0].clientY-y0;if(dy>0){sh.style.transition='none';sh.style.transform='translateY('+dy+'px)'}else dy=0},{passive:true});
  sh.addEventListener('touchend',function(){if(y0===null)return;y0=null;var close=dy>110;dy=0;sh.style.transition='';sh.style.transform='';if(close)closeAll()})});
 
-var ICO={'Еда':'🍔','Транспорт':'🚌','Дом':'🏠','Здоровье':'💊','Покупки':'🛍️','Развлечения':'🎬','Рассрочка':'💳','Другое':'📦','Зарплата':'💼','Подработка':'💻','Подарок':'🎁'};
+var PATHS={
+'Еда':'<path d="M7 3v7M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10"/><path d="M17 3c-2.2 1.2-3 3.6-3 6.5 0 1.8 1 3 3 3.5V21"/>',
+'Транспорт':'<rect x="4.5" y="4" width="15" height="13" rx="3"/><path d="M4.5 12h15M8 20v-3M16 20v-3"/><circle cx="8.5" cy="14.5" r=".6"/><circle cx="15.5" cy="14.5" r=".6"/>',
+'Дом':'<path d="M3.5 11 12 3.5 20.5 11M5.5 9.5V20h13V9.5M10 20v-5.5h4V20"/>',
+'Здоровье':'<path d="M9 4h6v5h5v6h-5v5H9v-5H4V9h5z"/>',
+'Покупки':'<path d="M6 8h12l1 12H5zM9 8V7a3 3 0 0 1 6 0v1"/>',
+'Развлечения':'<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M10.5 9.5v5l4-2.5z"/>',
+'Рассрочка':'<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M6.5 15h4"/>',
+'Другое':'<path d="M4 8l8-4 8 4v8l-8 4-8-4zM4 8l8 4 8-4M12 12v8"/>',
+'Зарплата':'<rect x="3.5" y="8" width="17" height="11.5" rx="2"/><path d="M9 8V6.5A1.5 1.5 0 0 1 10.5 5h3A1.5 1.5 0 0 1 15 6.5V8M3.5 13h17"/>',
+'Подработка':'<rect x="5" y="5.5" width="14" height="10" rx="1.5"/><path d="M3 19h18"/>',
+'Подарок':'<rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M3 7h18v3H3zM12 7v13M12 7c-1.5-3.5-5-3-5-1 0 1.5 3 1 5 1zM12 7c1.5-3.5 5-3 5-1 0 1.5-3 1-5 1z"/>'};
+function icEl(cls,k){var s=el('span',cls);s.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(PATHS[k]||PATHS['Другое'])+'</svg>';return s}
+function catName(k){var s=el('span','nm');s.appendChild(icEl('si',k));s.appendChild(document.createTextNode(k));return s}
 var MON3=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'],statMode='week';
-function ic(k){return ICO[k]||'📦'}
 function kfmt(v){v=Math.round(v);if(v>=1e6)return(v/1e6).toFixed(1).replace('.0','')+'м';if(v>=1e4)return Math.round(v/1000)+'к';if(v>=1000)return(v/1000).toFixed(1).replace('.0','')+'к';return String(v)}
 $('mtag').onclick=function(){var t0=today0(),m0=new Date(t0.getFullYear(),t0.getMonth(),1);
  if(tab==='ops'&&mode==='day'){if(dayView.getTime()===t0.getTime())return;var d1=dayView<t0?1:-1;dayView=t0;view=m0;render();bump(d1)}
