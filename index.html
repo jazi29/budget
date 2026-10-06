@@ -26,7 +26,7 @@
   <div class="seg three tabs" id="tabs"><i class="thumb"></i><button data-tab="ops" class="on">Операции</button><button data-tab="inst">Рассрочки</button><button data-tab="stat">Статистика</button></div>
   <div id="pOps">
   <div class="seg mini" id="modeSeg"><i class="thumb"></i><button data-mode="day" class="on">День</button><button data-mode="month">Месяц</button></div>
-  <div class="balance"><small>Текущие деньги</small><div class="sum" id="bal"></div><div class="msub" id="msub"></div></div>
+  <div class="balance"><small>Сейчас в кошельке <u>изменить</u></small><div class="sum" id="bal"></div><div class="msub" id="msub"></div></div>
   <div class="pair">
     <div class="box"><small>Расходы</small><strong class="out" id="sout"></strong></div>
     <div class="box"><small>Доходы</small><strong class="in" id="sin"></strong></div>
@@ -63,18 +63,27 @@
   <button class="btn ghost" data-close>Закрыть</button>
 </div></div>
 <div class="veil" id="v3"><div class="sheet">
-  <h2 class="h" id="ititle">Новая рассрочка</h2>
+  <h2 class="h" id="ititle">Новая рассрочка или кредит</h2>
+  <div class="seg" id="kindSeg"><i class="thumb"></i><button data-kind="inst" class="on">Рассрочка</button><button data-kind="loan">Кредит</button></div>
   <input class="fld" id="iname" placeholder="Что в рассрочку, например телефон" autocomplete="off">
   <input class="fld" id="itotal" inputmode="decimal" placeholder="Общая сумма" autocomplete="off">
   <input class="fld" id="imonths" inputmode="numeric" placeholder="На сколько месяцев" autocomplete="off">
+  <div id="loanF" style="display:none"><input class="fld" id="irate" inputmode="decimal" placeholder="Ставка, % годовых (необязательно)" autocomplete="off"><input class="fld" id="ipay" inputmode="decimal" placeholder="Платёж в месяц из банка (необязательно)" autocomplete="off"><div class="im" style="margin:-2px 4px 12px">Если знаете точный платёж из банка, введите его, так расчёт будет точнее. Без него платёж считается по ставке.</div></div>
   <label class="lb" for="idate">Дата первого платежа</label>
   <input class="fld" id="idate" type="date">
   <label class="lb" for="ipaid">Уже оплачено платежей</label>
   <input class="fld" id="ipaid" inputmode="numeric" placeholder="0" autocomplete="off">
-  <div class="im" id="icalc" style="margin:0 4px 10px"></div>
+  <div class="im" id="icalc" style="margin:0 4px 10px;white-space:pre-line"></div>
   <button class="btn" id="isave">Сохранить</button>
   <button class="btn ghost" id="iundo" style="display:none">Отменить последний платёж</button>
   <button class="btn del" id="idel" style="display:none">Удалить рассрочку</button>
+  <button class="btn ghost" data-close>Отмена</button>
+</div></div>
+<div class="veil" id="v4"><div class="sheet">
+  <h2 class="h">Деньги в кошельке</h2>
+  <p class="p">Укажите, сколько денег у вас сейчас. Дальше приложение само прибавит доходы и вычтет расходы. Записи с будущей датой не учитываются.</p>
+  <input class="amt" id="wval" inputmode="decimal" placeholder="0" autocomplete="off">
+  <button class="btn" id="wsave">Сохранить</button>
   <button class="btn ghost" data-close>Отмена</button>
 </div></div>
 <div class="toast" id="toast"></div>
