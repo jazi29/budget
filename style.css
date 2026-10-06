@@ -105,6 +105,11 @@ input[type=date]::-webkit-datetime-edit{padding:0}
 @keyframes pop{from{opacity:0;transform:translateX(-50%) scale(.6)}}
 @keyframes flash{0%{background:var(--chip);transform:scale(.97)}100%{background:transparent;transform:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.igrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
+.igrid button{height:44px;border-radius:12px;background:var(--chip);display:grid;place-items:center}
+.igrid button.on{background:var(--ink);color:var(--bg)}
+#clist .group{background:var(--bg)}
+#cname:disabled{opacity:.6}
 .balance{cursor:pointer}
 .balance small u{text-underline-offset:3px;margin-left:4px}
 .balance:active .sum{opacity:.6}

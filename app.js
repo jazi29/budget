@@ -51,7 +51,7 @@ function renderOps(){
 
 function setType(t){form.type=t;$('tout').classList.toggle('on',t==='out');$('tin').classList.toggle('on',t==='in');thumb($('tout').parentNode);
  if(CATS[t].indexOf(form.cat)<0)form.cat=CATS[t][0];drawChips()}
-function drawChips(){var c=$('chips');c.textContent='';CATS[form.type].forEach(function(k){var b=el('button',k===form.cat?'on':'');b.appendChild(icEl('si',k));b.appendChild(document.createTextNode(k));b.type='button';b.onclick=function(){form.cat=k;drawChips()};c.appendChild(b)})}
+function drawChips(){var c=$('chips');c.textContent='';CATS[form.type].forEach(function(k){var b=el('button',k===form.cat?'on':'');b.appendChild(icEl('si',k));b.appendChild(document.createTextNode(k));b.type='button';b.onclick=function(){form.cat=k;drawChips()};c.appendChild(b)});var pl=el('button','','+ Своя');pl.type='button';pl.onclick=function(){ceBack=function(n){form.cat=n;drawChips()};ctype=form.type;editCat(null,form.type)};c.appendChild(pl)}
 function openForm(t){
  form.id=t?t.id:null;form.cat=t?t.cat:'';
  $('amount').value=t?String(t.amount).replace('.',','):'';$('note').value=t?t.note||'':'';$('date').value=t?t.date:(tab==='ops'&&mode==='day'?iso(dayView):iso(new Date()));
@@ -67,7 +67,7 @@ function saveForm(){
  store();closeAll();
  var dd=new Date(d+'T00:00:00');view=new Date(dd.getFullYear(),dd.getMonth(),1);dayView=dd;render();toast('Сохранено')}
 
-function payload(){return JSON.stringify({app:'budget',version:3,exported:new Date().toISOString(),transactions:tx,installments:inst,start:startBal},null,1)}
+function payload(){return JSON.stringify({app:'budget',version:3,exported:new Date().toISOString(),transactions:tx,installments:inst,start:startBal,categories:cfg},null,1)}
 function importData(txt){
  try{var o=JSON.parse(txt),arr=Array.isArray(o)?o:(o.transactions||[]);if(!Array.isArray(arr))throw 0;
   var ids={};tx.forEach(function(t){ids[t.id]=1});var n=0;
@@ -78,6 +78,8 @@ function importData(txt){
   var ni=0,iids={};inst.forEach(function(i){iids[i.id]=1});
   (Array.isArray(o.installments)?o.installments:[]).forEach(function(i){if(!i||!i.id||iids[i.id]||!i.name||!(+i.total>0)||!(+i.months>=1)||!/^\d{4}-\d{2}-\d{2}$/.test(i.start))return;iids[i.id]=1;var mo=Math.floor(+i.months);inst.push({id:String(i.id),name:String(i.name),total:+i.total,months:mo,kind:i.kind==='loan'?'loan':'inst',rate:+i.rate||0,pay:+i.pay||0,start:i.start,paid:Math.min(Math.max(0,Math.floor(+i.paid||0)),mo),txs:Array.isArray(i.txs)?i.txs:[]});ni++});
   if(typeof o.start==='number'&&startBal===0){startBal=o.start;storeS()}
+  if(o.categories&&Array.isArray(o.categories.out)&&Array.isArray(o.categories.in)){['out','in'].forEach(function(ty){o.categories[ty].forEach(function(c){if(c&&typeof c.name==='string'&&c.name&&!cfg[ty].some(function(x){return x.name===c.name}))cfg[ty].splice(Math.max(0,cfg[ty].length-1),0,{name:c.name.slice(0,24),icon:ICONS[c.icon]?c.icon:'other'})})})}
+  ensureCats();storeC();syncCats();
   store();storeI();render();closeAll();toast(n+ni?'Загружено записей: '+(n+ni):'Новых записей нет')}
  catch(e){toast('Не удалось прочитать данные')}}
 
@@ -283,7 +285,7 @@ var PATHS={
 'Подработка':'<rect x="5" y="5.5" width="14" height="10" rx="1.5"/><path d="M3 19h18"/>',
 'Подарок':'<rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M3 7h18v3H3zM12 7v13M12 7c-1.5-3.5-5-3-5-1 0 1.5 3 1 5 1zM12 7c1.5-3.5 5-3 5-1 0 1.5-3 1-5 1z"/>'};
 PATHS['Кредит']='<path d="M5 19 19 5"/><circle cx="7.5" cy="7.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/>';
-function icEl(cls,k){var s=el('span',cls);s.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(PATHS[k]||PATHS['Другое'])+'</svg>';return s}
+function icEl(cls,k){var s=el('span',cls);s.innerHTML=svgI(iconId(k));return s}
 function catName(k){var s=el('span','nm');s.appendChild(icEl('si',k));s.appendChild(document.createTextNode(k));return s}
 var MON3=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'],statMode='week';
 function kfmt(v){v=Math.round(v);if(v>=1e6)return(v/1e6).toFixed(1).replace('.0','')+'м';if(v>=1e4)return Math.round(v/1000)+'к';if(v>=1000)return(v/1000).toFixed(1).replace('.0','')+'к';return String(v)}
@@ -314,7 +316,59 @@ function fm(v){return(v<0?'−':'')+money(Math.abs(v))}
 $('bal').parentNode.onclick=function(){$('wval').value=String(walletNow()).replace('.',',');$('v4').classList.add('on');setTimeout(function(){$('wval').focus();$('wval').select()},200)};
 $('wsave').onclick=function(){var v=parseFloat($('wval').value.replace(/\s/g,'').replace(',','.'));if(isNaN(v)){toast('Введите сумму');return}
  startBal=Math.round((v-netNow())*100)/100;storeS();closeAll();render();toast('Сохранено')};
-loadS();loadI();load();render();
+
+var ICONS={food:PATHS['Еда'],transport:PATHS['Транспорт'],home:PATHS['Дом'],health:PATHS['Здоровье'],shopping:PATHS['Покупки'],fun:PATHS['Развлечения'],card:PATHS['Рассрочка'],loan:PATHS['Кредит'],other:PATHS['Другое'],salary:PATHS['Зарплата'],laptop:PATHS['Подработка'],gift:PATHS['Подарок'],
+coffee:'<path d="M5 9h11v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM16 10h1.5a2 2 0 0 1 0 4H16M8 3v2M12 3v2"/>',
+cart:'<path d="M3 4h2.5l2 10h10l2-7H7"/><circle cx="9" cy="19" r="1.2"/><circle cx="17" cy="19" r="1.2"/>',
+phone:'<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
+book:'<path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h10"/>',
+car:'<path d="M4 15v-3l2-5h12l2 5v3zM4 15v3M20 15v3"/><circle cx="8" cy="13.5" r=".7"/><circle cx="16" cy="13.5" r=".7"/>',
+heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+plane:'<path d="M21 4 3 11l7 3 3 7z"/>',
+paw:'<circle cx="7" cy="10" r="1.6"/><circle cx="17" cy="10" r="1.6"/><circle cx="10" cy="6" r="1.6"/><circle cx="14" cy="6" r="1.6"/><path d="M8 17c0-3 2-5 4-5s4 2 4 5c0 2-2 2-4 1-2 1-4 1-4-1z"/>',
+star:'<path d="M12 4l2.5 5 5.5.8-4 3.9 1 5.5-5-2.7-5 2.7 1-5.5-4-3.9 5.5-.8z"/>',
+shirt:'<path d="M8 4 4 7l2 3 2-1v11h8V9l2 1 2-3-4-3-2 2h-4z"/>',
+gym:'<path d="M3 10v4M6 8v8M18 8v8M21 10v4M6 12h12"/>',
+wallet:'<rect x="3.5" y="6.5" width="17" height="12" rx="2.5"/><path d="M3.5 10h17M16 14h2"/>',
+music:'<path d="M9 18V6l10-2v12"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="16" r="2"/>',
+globe:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c3 3.5 3 13.5 0 17M12 3.5c-3 3.5-3 13.5 0 17"/>',
+bolt:'<path d="M13 3 5 14h6l-1 7 8-11h-6z"/>'};
+function svgI(id){return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[id]||ICONS.other)+'</svg>'}
+var CKEY='budget.cats.v1',cfg=null,ce={type:'out',idx:null,icon:'star'},ceBack=null,ctype='out';
+var DEFC={out:[['Еда','food'],['Транспорт','transport'],['Дом','home'],['Здоровье','health'],['Покупки','shopping'],['Развлечения','fun'],['Рассрочка','card'],['Кредит','loan'],['Другое','other']],in:[['Зарплата','salary'],['Подработка','laptop'],['Подарок','gift'],['Другое','other']]};
+function loadC(){try{var r=JSON.parse(localStorage.getItem(CKEY));if(r&&Array.isArray(r.out)&&Array.isArray(r.in))cfg=r}catch(e){}
+ if(!cfg){cfg={};['out','in'].forEach(function(t){cfg[t]=DEFC[t].map(function(a){return{name:a[0],icon:a[1]}})})}
+ ensureCats();syncCats()}
+function storeC(){try{localStorage.setItem(CKEY,JSON.stringify(cfg))}catch(e){}}
+function syncCats(){CATS.out=cfg.out.map(function(c){return c.name});CATS.in=cfg.in.map(function(c){return c.name})}
+function ensureCats(){var ch=0;tx.forEach(function(t){if(!cfg[t.type].some(function(c){return c.name===t.cat})){cfg[t.type].splice(Math.max(0,cfg[t.type].length-1),0,{name:t.cat,icon:'other'});ch=1}});if(ch)storeC()}
+function iconId(k){var c=cfg&&cfg.out.concat(cfg.in).filter(function(x){return x.name===k})[0];return c?c.icon:'other'}
+function isProt(t,n){return n==='Другое'||(t==='out'&&(n==='Рассрочка'||n==='Кредит'))}
+function setCT(t){ctype=t;document.querySelectorAll('#cseg button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-t')===t)});thumb($('cseg'))}
+function showList(){$('cedit').style.display='none';$('cview').style.display='';
+ var l=$('clist');l.textContent='';var g=el('div','group');
+ cfg[ctype].forEach(function(c,i){var r=el('button','row'),ci=el('span','ci');r.type='button';ci.innerHTML=svgI(c.icon);r.appendChild(ci);var t=el('div','t');t.appendChild(el('div',null,c.name));r.appendChild(t);r.onclick=function(){editCat(i,ctype)};g.appendChild(r)});
+ l.appendChild(g);g.style.marginBottom='14px'}
+function drawGrid(){var g=$('igrid');g.textContent='';Object.keys(ICONS).forEach(function(k){var b=el('button',k===ce.icon?'on':'');b.type='button';b.innerHTML=svgI(k);b.onclick=function(){ce.icon=k;drawGrid()};g.appendChild(b)})}
+function editCat(i,type){ce={type:type,idx:i,icon:i==null?'star':cfg[type][i].icon};var prot=i!=null&&isProt(type,cfg[type][i].name);
+ $('ctitle').textContent=i==null?'Новая категория':'Категория';$('cname').value=i==null?'':cfg[type][i].name;$('cname').disabled=prot;
+ $('cdel').style.display=(i!=null&&!prot)?'':'none';drawGrid();$('cview').style.display='none';$('cedit').style.display='';$('v5').classList.add('on')}
+function openCats(){ceBack=null;setCT('out');showList();$('v5').classList.add('on')}
+function saveCat(){var name=$('cname').value.trim().slice(0,24),list=cfg[ce.type],old=ce.idx==null?null:list[ce.idx];
+ if(!name){toast('Введите название');return}
+ if(list.some(function(c,j){return j!==ce.idx&&c.name.toLowerCase()===name.toLowerCase()})){toast('Такая категория уже есть');return}
+ if(old){if(old.name!==name){tx.forEach(function(t){if(t.type===ce.type&&t.cat===old.name)t.cat=name});store()}old.name=name;old.icon=ce.icon}
+ else list.splice(Math.max(0,list.length-1),0,{name:name,icon:ce.icon});
+ storeC();syncCats();render();
+ if(ceBack){var f=ceBack;ceBack=null;$('v5').classList.remove('on');f(name)}else{ctype=ce.type;showList()}}
+$('csave').onclick=saveCat;
+$('ccancel').onclick=function(){if(ceBack){ceBack=null;$('v5').classList.remove('on')}else showList()};
+$('cdel').onclick=function(){var c=cfg[ce.type][ce.idx];if(!confirm('Удалить категорию «'+c.name+'»? Записи из неё перейдут в «Другое».'))return;
+ tx.forEach(function(t){if(t.type===ce.type&&t.cat===c.name)t.cat='Другое'});cfg[ce.type].splice(ce.idx,1);store();storeC();syncCats();render();ctype=ce.type;showList()};
+$('cnew').onclick=function(){editCat(null,ctype)};
+document.querySelectorAll('#cseg button').forEach(function(b){b.onclick=function(){setCT(b.getAttribute('data-t'));showList()}});
+$('catmgr').onclick=function(){$('v2').classList.remove('on');openCats()};
+loadS();loadI();load();loadC();render();
 function guessCat(note,type){
  var n=(note||'').toLowerCase();
  if(type==='in')return /зарплат|salary|аванс/.test(n)?'Зарплата':'Другое';
@@ -333,6 +387,7 @@ function guessCat(note,type){
  var a=parseFloat(raw);if(!(a>0))return;
  var type=q.get('type')==='in'?'in':'out',note=(q.get('note')||'').trim().slice(0,80),cat=q.get('cat');
  if(!cat||CATS[type].indexOf(cat)<0)cat=guessCat(note,type);
+ if(CATS[type].indexOf(cat)<0)cat='Другое';
  var ext=q.get('id'),id=ext?'x'+ext:uid(),dup=tx.some(function(t){return t.id===id});
  history.replaceState(null,'',location.pathname);
  if(dup){toast('Эта операция уже добавлена');return}

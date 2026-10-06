@@ -53,6 +53,7 @@
 <div class="veil" id="v2"><div class="sheet">
   <h2 class="h">Мои данные</h2>
   <p class="p">Всё хранится только на этом устройстве, в браузере. Скачайте копию, чтобы не потерять записи или перенести их на другое устройство.</p>
+  <button class="btn ghost" id="catmgr">Категории</button>
   <button class="btn" id="exp">Скачать копию</button>
   <button class="btn ghost" id="copy">Скопировать как текст</button>
   <button class="btn ghost" id="impf">Загрузить из файла</button>
@@ -85,6 +86,24 @@
   <input class="amt" id="wval" inputmode="decimal" placeholder="0" autocomplete="off">
   <button class="btn" id="wsave">Сохранить</button>
   <button class="btn ghost" data-close>Отмена</button>
+</div></div>
+<div class="veil" id="v5"><div class="sheet">
+  <div id="cview">
+    <h2 class="h">Категории</h2>
+    <div class="seg" id="cseg"><i class="thumb"></i><button data-t="out" class="on">Расходы</button><button data-t="in">Доходы</button></div>
+    <div id="clist"></div>
+    <button class="btn" id="cnew">Новая категория</button>
+    <button class="btn ghost" data-close>Готово</button>
+  </div>
+  <div id="cedit" style="display:none">
+    <h2 class="h" id="ctitle">Категория</h2>
+    <input class="fld" id="cname" placeholder="Название" maxlength="24" autocomplete="off">
+    <label class="lb">Значок</label>
+    <div class="igrid" id="igrid"></div>
+    <button class="btn" id="csave">Сохранить</button>
+    <button class="btn del" id="cdel">Удалить категорию</button>
+    <button class="btn ghost" id="ccancel">Назад</button>
+  </div>
 </div></div>
 <div class="toast" id="toast"></div>
 
