@@ -145,7 +145,7 @@ function renderInst(){
   if(i.paid>=i.months){card.appendChild(el('div','im in','Рассрочка погашена'))}
   else{
    var nd=addM(i.start,i.paid),late=nd<=today;
-   card.appendChild(el('div','im'+(late?' out':''),(late?'Пора платить: ':'Следующий платёж: ')+dl2(nd)+', '+money(i.paid>=i.months-1?rem(i):mon(i))));
+   
    var p=el('button','pay','Внести платёж');p.type='button';p.onclick=function(){payI(i.id)};card.appendChild(p)}
   c.appendChild(card)})}
 
