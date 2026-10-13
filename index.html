@@ -1,69 +1,112 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Habits</title>
-<meta name="theme-color" content="#0d1117">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Habits">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Бюджет">
+<meta name="theme-color" content="#F6F7F9">
+<meta name="description" content="Личный учёт доходов, расходов и рассрочек">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+<title>Бюджет</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="app">
-
-<div class="screen" id="s-today">
-  <div class="hd"><div><h1 id="ttl"></h1><p id="dt"></p></div>
-    <div style="display:flex"><button class="ib" id="tm" aria-label="Focus"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg></button><button class="ib g" id="add" aria-label="Add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
-  <div class="week" id="week"></div>
-  <div class="sum hide" id="sum"></div>
-  <button class="run hide" id="run"></button>
-  <div id="list"></div>
-</div>
-
-<div class="screen hide" id="s-stats">
-  <div class="hd"><div><h1>Stats</h1><p id="stp">last 30 days</p></div></div>
-  <div class="seg2" id="seg2"><button data-v="o" class="on">Overview</button><button data-v="w">Week</button><button data-v="m">Month</button><button data-v="y">Year</button></div>
-  <div id="ovw">
-  <div class="big" id="bp">0<small>%</small></div>
-  <p class="lead" id="bl"></p>
-  <div id="allcal"></div>
-  <div class="sec">By habit</div><div id="rates"></div>
-  <div class="sec">Focus</div><div class="st3"><div><b id="k1">0</b><span>min total</span></div><div><b id="k2">0</b><span>sessions</span></div><div><b id="k3">0</b><span>min today</span></div></div>
-  <div class="sec">Data</div>
-  <div class="card2"><div class="two"><button class="btn o" id="exp">Export backup</button><button class="btn o" id="impb">Import backup</button></div>
-    <p class="note">Save your data to a file and load it on another device or after reinstalling.</p><p class="note dev" id="dev"></p></div>
+  <div class="top">
+    <div class="month">
+      <button class="ic" id="prev" aria-label="Предыдущий месяц">‹</button>
+      <div class="mw"><b id="mlabel"></b><button class="mtag" id="mtag"></button></div>
+      <button class="ic" id="next" aria-label="Следующий месяц">›</button>
+    </div>
+    <button class="ic" id="menu" aria-label="Данные">⋯</button>
   </div>
-  <div id="rep" class="hide"></div>
+  <div class="seg three tabs" id="tabs"><i class="thumb"></i><button data-tab="ops" class="on">Операции</button><button data-tab="inst">Рассрочки</button><button data-tab="stat">Статистика</button></div>
+  <div id="pOps">
+  <div class="seg mini" id="modeSeg"><i class="thumb"></i><button data-mode="day" class="on">День</button><button data-mode="month">Месяц</button></div>
+  <div class="balance"><small>Сейчас в кошельке <u>изменить</u></small><div class="sum" id="bal"></div><div class="msub" id="msub"></div></div>
+  <div class="pair">
+    <div class="box"><small>Расходы</small><strong class="out" id="sout"></strong></div>
+    <div class="box"><small>Доходы</small><strong class="in" id="sin"></strong></div>
+  </div>
+  <div id="cats"></div>
+  <div id="list"></div>
+  </div>
+  <div id="pInst" style="display:none"></div>
+  <div id="pStat" style="display:none"></div>
 </div>
+<button class="fab" id="add">+ Добавить</button>
 
-<div class="screen hide" id="s-tasks">
-  <div class="hd"><div><h1>Tasks</h1><p>a simple to-do list</p></div></div>
-  <div class="addr"><input id="tin" placeholder="New task" maxlength="60"><button id="tadd">Add</button></div>
-  <div id="tlist"></div>
-</div>
+<div class="veil" id="v1"><div class="sheet">
+  <div class="seg"><i class="thumb"></i><button id="tout" class="on">Расход</button><button id="tin">Доход</button></div>
+  <input class="amt" id="amount" inputmode="decimal" placeholder="0" autocomplete="off">
+  <div class="chips" id="chips"></div>
+  <input class="fld" id="note" placeholder="Заметка (необязательно)" autocomplete="off">
+  <input class="fld" id="date" type="date">
+  <button class="btn" id="save">Сохранить</button>
+  <button class="btn del" id="del" style="display:none">Удалить</button>
+  <button class="btn ghost" data-close>Отмена</button>
+</div></div>
 
-<nav class="nav"><div id="nav">
-  <button data-t="today" class="on" aria-label="Today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg></button>
-  <button data-t="tasks" aria-label="Tasks"><svg viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></button>
-  <button data-t="stats" aria-label="Stats"><svg viewBox="0 0 24 24"><path d="M6 20V11M12 20V5M18 20v-6"/></svg></button>
-</div></nav>
-</div>
+<div class="veil" id="v2"><div class="sheet">
+  <h2 class="h">Мои данные</h2>
+  <p class="p">Всё хранится только на этом устройстве, в браузере. Скачайте копию, чтобы не потерять записи или перенести их на другое устройство.</p>
+  <button class="btn ghost" id="catmgr">Категории</button>
+  <button class="btn" id="exp">Скачать копию</button>
+  <button class="btn ghost" id="copy">Скопировать как текст</button>
+  <button class="btn ghost" id="impf">Загрузить из файла</button>
+  <input type="file" id="file" accept=".json,application/json,text/plain" hidden>
+  <textarea class="fld" id="paste" placeholder="Или вставьте сюда скопированные данные" style="margin-top:12px"></textarea>
+  <button class="btn ghost" id="impt">Загрузить из текста</button>
+  <button class="btn del" id="wipe">Удалить все записи</button>
+  <button class="btn ghost" data-close>Закрыть</button>
+</div></div>
+<div class="veil" id="v3"><div class="sheet">
+  <h2 class="h" id="ititle">Новая рассрочка или кредит</h2>
+  <div class="seg" id="kindSeg"><i class="thumb"></i><button data-kind="inst" class="on">Рассрочка</button><button data-kind="loan">Кредит</button></div>
+  <input class="fld" id="iname" placeholder="Что в рассрочку, например телефон" autocomplete="off">
+  <input class="fld" id="itotal" inputmode="decimal" placeholder="Общая сумма" autocomplete="off">
+  <input class="fld" id="imonths" inputmode="numeric" placeholder="На сколько месяцев" autocomplete="off">
+  <div id="loanF" style="display:none"><input class="fld" id="irate" inputmode="decimal" placeholder="Ставка, % годовых (необязательно)" autocomplete="off"><input class="fld" id="ipay" inputmode="decimal" placeholder="Платёж в месяц из банка (необязательно)" autocomplete="off"><div class="im" style="margin:-2px 4px 12px">Если знаете точный платёж из банка, введите его, так расчёт будет точнее. Без него платёж считается по ставке.</div></div>
+  <label class="lb" for="idate">Дата первого платежа</label>
+  <input class="fld" id="idate" type="date">
+  <label class="lb" for="ipaid">Уже оплачено платежей</label>
+  <input class="fld" id="ipaid" inputmode="numeric" placeholder="0" autocomplete="off">
+  <div class="im" id="icalc" style="margin:0 4px 10px;white-space:pre-line"></div>
+  <button class="btn" id="isave">Сохранить</button>
+  <button class="btn ghost" id="iundo" style="display:none">Отменить последний платёж</button>
+  <button class="btn del" id="idel" style="display:none">Удалить рассрочку</button>
+  <button class="btn ghost" data-close>Отмена</button>
+</div></div>
+<div class="veil" id="v4"><div class="sheet">
+  <h2 class="h">Деньги в кошельке</h2>
+  <p class="p">Укажите, сколько денег у вас сейчас. Дальше приложение само прибавит доходы и вычтет расходы. Записи с будущей датой не учитываются.</p>
+  <input class="amt" id="wval" inputmode="decimal" placeholder="0" autocomplete="off">
+  <button class="btn" id="wsave">Сохранить</button>
+  <button class="btn ghost" data-close>Отмена</button>
+</div></div>
+<div class="veil" id="v5"><div class="sheet">
+  <div id="cview">
+    <h2 class="h">Категории</h2>
+    <div class="seg" id="cseg"><i class="thumb"></i><button data-t="out" class="on">Расходы</button><button data-t="in">Доходы</button></div>
+    <div id="clist"></div>
+    <button class="btn" id="cnew">Новая категория</button>
+    <button class="btn ghost" data-close>Готово</button>
+  </div>
+  <div id="cedit" style="display:none">
+    <h2 class="h" id="ctitle">Категория</h2>
+    <input class="fld" id="cname" placeholder="Название" maxlength="24" autocomplete="off">
+    <label class="lb">Значок</label>
+    <div class="igrid" id="igrid"></div>
+    <button class="btn" id="csave">Сохранить</button>
+    <button class="btn del" id="cdel">Удалить категорию</button>
+    <button class="btn ghost" id="ccancel">Назад</button>
+  </div>
+</div></div>
+<div class="toast" id="toast"></div>
 
-<div class="fs hide" id="fs">
-  <button class="ib" id="fx" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  <div class="c2"><div class="fl" id="fl"></div><div class="ft" id="ft">25:00</div><div class="fb"><u id="fu"></u></div>
-    <div class="chips" id="chips"></div><select id="hsel"></select></div>
-  <button class="btn" id="go">Start</button>
-</div>
-
-<input type="file" id="imp" accept=".json,application/json,text/plain" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1">
-<script src="app.js?v=8"></script>
+<script src="app.js"></script>
 </body>
 </html>
